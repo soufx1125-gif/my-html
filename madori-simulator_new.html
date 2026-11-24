@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0f2a3d"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="間取り">
+<title>間取りシミュレーター</title>
+<style>
+:root{--bg:#eef1f5;--pn:#fff;--tx:#1f2937;--mu:#6b7280;--bd:#e3e7ee;--ac:#0f9d8a;--ok:#15803d;--wn:#b45309;--er:#dc2626}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f141a;--pn:#18202a;--tx:#e6ebf2;--mu:#93a0b2;--bd:#2a3442;--ac:#14b8a6;--ok:#4ade80;--wn:#fbbf24;--er:#f87171}}
+:root[data-theme="dark"]{--bg:#0f141a;--pn:#18202a;--tx:#e6ebf2;--mu:#93a0b2;--bd:#2a3442;--ac:#14b8a6;--ok:#4ade80;--wn:#fbbf24;--er:#f87171}
+*{box-sizing:border-box}
+html{box-sizing:border-box;height:100%;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{height:100%;display:flex;flex-direction:column;margin:0;font:14px/1.55 system-ui,"Hiragino Sans","Yu Gothic UI",sans-serif;background:var(--bg);color:var(--tx)}
+header{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 16px;background:linear-gradient(90deg,#0f2a3d,#134e5e);color:#fff}
+h1{font-size:17px;margin:0 6px 0 0;letter-spacing:.04em}.mu{color:var(--mu);font-size:12px}
+button,input{font:inherit;color:inherit;background:var(--pn);border:1px solid var(--bd);border-radius:8px;padding:6px 12px}
+button{cursor:pointer;transition:.15s}button:hover{border-color:var(--ac)}button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+header button{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.28);color:#fff}header button.on{background:var(--ac)}
+#tabs{display:flex;gap:4px;background:rgba(0,0,0,.28);padding:3px;border-radius:10px}#tabs button{border:0;background:transparent;padding:6px 18px;font-weight:700}#tabs button.on{background:#fff;color:#0f2a3d}
+.mn{position:relative}.mn summary{list-style:none;cursor:pointer;padding:6px 12px;border-radius:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28)}
+.mn>div{position:absolute;z-index:9;top:115%;left:0;background:var(--pn);color:var(--tx);border:1px solid var(--bd);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:6px;min-width:200px;box-shadow:0 10px 30px #0005}
+.mn>div button{background:var(--pn);color:var(--tx);border-color:var(--bd);text-align:left}
+main{display:grid;grid-template-columns:210px 1fr 340px;gap:12px;padding:12px;flex:1;min-height:0}
+.pn{background:var(--pn);border:1px solid var(--bd);border-radius:14px;padding:12px;overflow:auto;box-shadow:0 2px 10px #0000000d}
+#pal details{margin-bottom:8px}#pal summary{font-weight:700;cursor:pointer;padding:4px 0}#pal button{margin:3px 4px 0 0;padding:5px 10px;font-size:13px;border-radius:999px}
+#cvw{position:relative;padding:0;overflow:hidden;background:radial-gradient(circle at 50% 40%,#fff,#d5dde7)}
+#hint{position:absolute;left:12px;top:10px;z-index:2;background:#000b;color:#fff;border-radius:10px;padding:6px 12px;font-size:12px;pointer-events:none}
+#cv{width:100%;height:100%;touch-action:none;display:block}
+.st{display:flex;gap:4px;margin-bottom:10px;background:var(--bg);padding:3px;border-radius:10px}.st button{flex:1;border:0;background:transparent;padding:6px 4px;font-size:13px}.st button.on{background:var(--ac);color:#fff}
+.card{background:var(--bg);border-radius:10px;padding:10px;margin-bottom:10px}.card summary{cursor:pointer;font-weight:700}
+.g{stroke:rgba(255,255,255,.22);stroke-width:6}.gh{fill:none;stroke:var(--mu);stroke-width:10;stroke-dasharray:60 40}
+svg text{fill:#222;pointer-events:none}svg .lb{fill:#556}
+.rw{padding:3px 0;font-size:13px}.rw.o{color:var(--ok)}.rw.w{color:var(--wn)}.rw.e{color:var(--er)}
+.bar{height:10px;background:var(--bd);border-radius:6px;overflow:hidden;margin-bottom:6px}.bar i{display:block;height:100%;background:linear-gradient(90deg,#34d399,#0f9d8a)}.bar.e i{background:linear-gradient(90deg,#fb923c,#dc2626)}
+.row{display:flex;justify-content:space-between;gap:6px;align-items:center;margin:4px 0}.row input{width:92px;padding:4px 8px}
+#nav{display:none}#zm{position:absolute;right:10px;bottom:10px;z-index:2;display:flex;flex-direction:column;gap:6px}#zm button{width:40px;height:40px;padding:0;font-size:18px;border-radius:12px;box-shadow:0 2px 8px #0003}
+@media(max-width:900px){header{padding:8px 10px;gap:6px}h1{font-size:15px}main{display:block;padding:8px}#pal,#side,#cvw{display:none;height:100%}body[data-v=pal] #pal,body[data-v=side] #side,body[data-v=cv] #cvw{display:block}#hint{display:none}#nav{display:flex;gap:6px;padding:8px 10px;background:var(--pn);border-top:1px solid var(--bd)}#nav button{flex:1;padding:10px 4px;font-weight:700}#nav button.on{background:var(--ac);color:#fff;border-color:var(--ac)}.mn>div{min-width:170px}}
+</style></head><body>
+<header><h1>🏠 間取りシミュレーター</h1><div id="tabs"></div>
+<button id="rt" title="選んだものを90°回転">↻ 回転</button><button id="il" class="on" title="イラスト表示の切替">🎨 イラスト</button>
+<details class="mn"><summary>⚙ 表示設定</summary><div><button id="fl"></button><button id="sd"></button><button id="sp"></button></div></details>
+<details class="mn"><summary>💾 保存・読込</summary><div><button id="sv">📋 プランをコピー(友達に送る用)</button><button id="dl">💾 プランをファイルに保存</button><button id="lb">📥 送られたプランを読込</button><button id="rs">最初からやり直す</button></div></details><input id="ld" type="file" accept=".json" hidden></header><noscript><div style="padding:16px;background:#fff3cd;color:#222;font:15px/1.6 system-ui">このプレビュー画面ではアプリが動きません。<b>Safari や Chrome などのブラウザで開いてください</b>(LINE・メール・ファイルアプリのプレビューでは動きません)。</div></noscript>
+<main><aside class="pn" id="pal"></aside><section class="pn" id="cvw"><div id="hint">① 左のパーツをクリックで追加 → ② 図の上でドラッグして移動 → ③ 右の「チェック」で確認</div><div id="zm"><button data-z="1" title="拡大">＋</button><button data-z="-1" title="縮小">－</button><button data-z="0" title="全体表示">⌂</button></div><svg id="cv"></svg></section><aside class="pn" id="side"></aside></main><nav id="nav"><button data-v="pal">🧩 パーツ</button><button data-v="cv" class="on">🖼 図面</button><button data-v="side">✔ 確認・設定</button></nav>
+<script>
+const $=s=>document.querySelector(s),m2=v=>(v/1000).toFixed(2),ar=a=>a.w*a.h/1e6;
+// id,名前,幅mm,奥行mm,色,種別(o屋外 a屋外部屋 b設備 r部屋 f家具)
+const D=[['car','車',3000,5000,'#cfd8dc','o'],['bike','バイク',1340,2000,'#cfd8dc','o'],['col','柱',150,150,'#555','o'],['bal','バルコニー',4160,1440,'#c8e6c9','a'],
+['b1616','浴室1616',1720,1720,'#b3e5fc','b'],['b1216','浴室1216',1320,1720,'#b3e5fc','b'],['b1620','浴室1620',1720,2120,'#b3e5fc','b'],
+['wc','洗面脱衣(一体)',1720,1720,'#b2ebf2','b'],['wcm','洗面脱衣(広)',1920,1720,'#b2ebf2','b'],['wr','洗面室',1120,1720,'#b2ebf2','b'],['dr','脱衣室',1120,1720,'#b2ebf2','b'],
+['tl','トイレ',920,1720,'#d1c4e9','b'],['en','後玄関',1200,900,'#ffe0b2','b'],['st','階段(直)',900,2700,'#ffcc80','b'],['stl','階段(L字・踊り場なし)',2025,1800,'#ffcc80','b'],['stu','階段(折返し・踊り場なし)',1800,1575,'#ffcc80','b'],
+['ldk','LDK',3760,4800,'#fff9c4','r'],['bd','寝室',3000,3300,'#f8bbd0','r'],['wic','WIC',1800,1800,'#f8bbd0','r'],['ch','子供部屋',2400,2700,'#dcedc8','r'],
+['k1','I型',2550,650,'#e0e0e0','f'],['k2','対面I型',2550,750,'#e0e0e0','f'],['kp','ペニンシュラ',2550,1000,'#e0e0e0','f'],['kl','L型(外形)',2400,1800,'#e0e0e0','f'],['ki','アイランド',2400,1000,'#e0e0e0','f'],['k3','II型',2550,2400,'#e0e0e0','f'],
+['s2','ソファ2人',1500,850,'#ffccbc','f'],['s3','ソファ3人',1900,850,'#ffccbc','f'],['tv','TVボード',1500,400,'#d7ccc8','f'],['tvs','テレビ',1230,250,'#37474f','f'],['dt','ダイニング',1500,800,'#ffe082','f'],
+['bs','ベッドS',1000,2000,'#f48fb1','f'],['bsd','ベッドSD',1200,2000,'#f48fb1','f'],['bdd','ベッドD',1400,2000,'#f48fb1','f'],['ds','学習机',1200,600,'#c5e1a5','f'],['rf','冷蔵庫',650,700,'#e0e0e0','f'],['cl','洋服ダンス',900,550,'#d7ccc8','f']];
+const G=[['🚗 車・バイク・外',['car','bike','col','bal']],['🛁 水回り・玄関・階段',['b1616','b1216','b1620','wc','wcm','wr','dr','tl','en','st','stl','stu']],['🛋 部屋',['ldk','bd','wic','ch']],['🍳 キッチン',['k1','k2','kp','kl','ki','k3']],['🪑 家具',['s2','s3','tv','tvs','dt','bs','bsd','bdd','ds','rf','cl']]];
+const T={};D.forEach(d=>T[d[0]]={n:d[1],w:d[2],h:d[3],c:d[4],k:d[5]});
+const BA=['b1616','b1216','b1620'],WA=['wc','wcm','dr'];
+let S,drag=null,TAB=0,ZM=1,PAN=[0,0];
+if(document.body)document.body.dataset.v='cv';
+const setV=v=>{document.body.dataset.v=v;document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v==v))};
+const mk=(t,x,y)=>({i:S.nid++,t,x,y,w:T[t].w,h:T[t].h,r:0});
+function rot(a,n=1){for(let k=0;k<n;k++){const cx=a.x+a.w/2,cy=a.y+a.h/2;[a.w,a.h]=[a.h,a.w];a.x=Math.round((cx-a.w/2)/10)*10;a.y=Math.round((cy-a.h/2)/10)*10;a.r=((a.r||0)+1)%4}}
+function mark(a){const k=T[a.t].k;if(k=='r'||k=='a'||a.t=='col')return'';const{x,y,w,h}=a,cx=x+w/2,cy=y+h/2,s=Math.min(110,w/4,h/4),q=s*1.2;
+ const P=[[cx-s,y+h-q,cx+s,y+h-q,cx,y+h],[x+q,cy-s,x+q,cy+s,x,cy],[cx-s,y+q,cx+s,y+q,cx,y],[x+w-q,cy-s,x+w-q,cy+s,x+w,cy]][a.r||0];
+ return`<polygon points="${P[0]},${P[1]} ${P[2]},${P[3]} ${P[4]},${P[5]}" fill="#444" fill-opacity=".55"/>`}
+function init(){S={W:4160,wall:200,max:[41.7,41.7,25.5],tot:103,dep:[10100,8660,6180],ext:[0,1440,2480],fh:2500,side:'back',sp3:true,site:{w:5700,d:15300,ox:770,front:0},f:0,nid:1,sel:null,items:[[],[],[]]};
+ S.items[0].push(mk('car',0,-5100),mk('bike',3100,-2100));}
+try{S=JSON.parse(localStorage.getItem('madori5'));}catch(e){S=null}
+if(!S||!S.items||!S.ext||!S.site||!S.side||S.sp3===undefined)init();
+const save=()=>{try{localStorage.setItem('madori5',JSON.stringify(S))}catch(e){}};
+const cur=()=>S.items[S.f].find(a=>a.i==S.sel);
+const OY=f=>(S.side=='back'?S.dep[0]-S.dep[f]:0)+(f==2&&S.sp3?(S.side=='back'?-1:1)*S.ext[2]/2:0);
+const EXT=f=>{const e=S.ext[f],o=OY(f),d=S.dep[f];if(!e)return[];if(f==2&&S.sp3)return[[o-e/2,o],[o+d,o+d+e/2]];return S.side=='back'?[[o-e,o]]:[[o+d,o+d+e]]};
+const ov=(a,b)=>a.x<b.x+b.w&&b.x<a.x+a.w&&a.y<b.y+b.h&&b.y<a.y+a.h;
+const okPair=(a,b)=>{const p=T[a.t].k,q=T[b.t].k;return(p=='f'&&(q=='r'||q=='a'))||(q=='f'&&(p=='r'||p=='a'))||(a.t=='tvs'&&b.t=='tv')||(b.t=='tvs'&&a.t=='tv')||(a.t=='bal'&&['car','bike'].includes(b.t))||(b.t=='bal'&&['car','bike'].includes(a.t))};
+const adj=(a,b,g=250)=>{const dx=Math.max(a.x-b.x-b.w,b.x-a.x-a.w),dy=Math.max(a.y-b.y-b.h,b.y-a.y-a.h);
+ const ox=Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x),oy=Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y);
+ return(dx>=-1&&dx<=g&&oy>300)||(dy>=-1&&dy<=g&&ox>300)};
+function chk(){const R=[],bad=new Set(),wz=new Set(),A=S.dep.map(d=>S.W*d/1e6),exF=[0,0,0];
+ S.items.forEach((fl,f)=>fl.forEach(i=>{if(i.t=='car'||i.t=='bike'){const ox=Math.max(0,Math.min(i.x+i.w,S.W)-Math.max(i.x,0)),oy=Math.max(0,Math.min(i.y+i.h,OY(f)+S.dep[f])-Math.max(i.y,OY(f)));exF[f]+=ox*oy/1e6}}));
+ const ex=exF[0]+exF[1]+exF[2];
+ A.forEach((a,i)=>R.push([a>S.max[i]+1e-9?'e':'o',`${i+1}階の広さ ${a.toFixed(2)}㎡(上限 ${S.max[i]}㎡)`]));
+ let bx=0;S.items.forEach((fl,f)=>fl.filter(a=>a.t=='bal').forEach(a=>{const ox=Math.max(0,Math.min(a.x+a.w,S.W)-Math.max(a.x,0)),oy=Math.max(0,Math.min(a.y+a.h,OY(f)+S.dep[f])-Math.max(a.y,OY(f)));bx+=(a.w*a.h-ox*oy)/1e6}));
+ const tot=A.reduce((a,b)=>a+b,0)-ex+bx;
+ R.push([tot>S.tot?'e':'o',`延べ面積 ${tot.toFixed(2)}㎡(上限 ${S.tot}㎡)`]);
+ let oc=0,wc=0,pc=0;
+ S.items.forEach((fl,f)=>{const d=S.dep[f],oo=OY(f),Z=EXT(f),top=Math.min(oo,...Z.map(z=>z[0])),bot=Math.max(oo+d,...Z.map(z=>z[1])),sx=-S.site.ox,Y0=S.dep[0]+S.ext[0]+S.site.front;fl.forEach((a,n)=>{const k=T[a.t].k,cb=['car','bike','bal'].includes(a.t),cv=a.t!='bal';
+  if(cb?(a.y<Y0-S.site.d||a.y+a.h>Y0||a.x<sx||a.x+a.w>sx+S.site.w):(a.y<top||a.y+a.h>bot||a.x<0||a.x+a.w>S.W)){bad.add(a.i);oc++}
+  else if(cv&&cb&&ov(a,{x:0,y:oo,w:S.W,h:d})){wz.add(a.i);pc++}
+  else if('brf'.includes(k)&&(a.x<S.wall||a.y<oo+S.wall||a.x+a.w>S.W-S.wall||a.y+a.h>oo+d-S.wall)){wz.add(a.i);wc++}
+  for(let q=n+1;q<fl.length;q++){const b=fl[q];if(ov(a,b)&&!okPair(a,b)){bad.add(a.i);bad.add(b.i);oc++}}})});
+ R.push([oc?'e':'o',`重なり・はみ出し ${oc}件`]);
+ R.push([wc?'w':'o',`壁にめり込み ${wc}件`]);
+ R.push([pc?'w':'o',`車・バイク ${pc?'建物に重なっている '+pc+'件':'建物の外に置けている'}`]);
+ let bn=0,bo=0;S.items.forEach(fl=>fl.filter(x=>BA.includes(x.t)).forEach(b=>{bn++;if(fl.some(w=>WA.includes(w.t)&&adj(b,w)))bo++}));
+ R.push([!bn?'w':bn==bo?'o':'e',`浴室と洗面脱衣が隣り合っている ${bn?bo+' / '+bn:'(浴室がまだありません)'}`]);
+ const all=S.items.flat(),cnt=t=>all.filter(x=>x.t==t).length;
+ const need=[['車',cnt('car')>=1],['バイク',cnt('bike')>=1],['浴室',BA.some(cnt)],['洗面脱衣',cnt('wc')+cnt('wcm')>0||(cnt('wr')>0&&cnt('dr')>0)],['後玄関',cnt('en')>=1],['LDK',cnt('ldk')>=1],['バルコニー',cnt('bal')>=1],['寝室',cnt('bd')>=1],['WIC',cnt('wic')>=1],['子供部屋×2',cnt('ch')>=2]];
+ const ms=need.filter(n=>!n[1]).map(n=>n[0]);
+ R.push([ms.length?'w':'o',`置き忘れチェック ${ms.length?'→ 未配置: '+ms.join('・'):'すべて置いてあります'}`]);
+ R.push([cnt('tl')==2?'o':'e',`トイレ ${cnt('tl')}個(2個必要)`]);
+ const sf=S.items.map(f=>f.find(x=>ST.includes(x.t))),mf=sf.map((x,i)=>x?'':(i+1)+'F').filter(Boolean),st=sf.filter(Boolean);
+ const same=st.every(x=>x.x==st[0].x&&x.y==st[0].y&&x.w==st[0].w&&x.h==st[0].h);
+ R.push([mf.length||!same?'w':'o',`階段 ${mf.length?'→ 未配置: '+mf.join('・'):same?'全階で同じ位置'+'':'→ 階ごとに位置がずれています'}`]);
+ const sp=SP();R.push([sp.rise>230?'e':'o',`階段の蹴上 ${Math.round(sp.rise)}mm(${sp.n}段・230mm以下が目安)`]);
+ return{R,bad,wz,A,exF,tot}}
+function snap(a,x,y){const W=S.W,d=S.dep[S.f],oo=OY(S.f),w=S.wall,X=[0,W-a.w,w,W-w-a.w,-S.site.ox,S.site.w-S.site.ox-a.w],Y=[oo,oo+d-a.h,oo+w,oo+d-w-a.h,...EXT(S.f).flatMap(z=>[z[0],z[1]-a.h]),-a.h,S.dep[0]+S.ext[0]+S.site.front-S.site.d];
+ S.items[S.f].filter(o=>o.i!=a.i).forEach(o=>{X.push(o.x+o.w,o.x-a.w,o.x,o.x+o.w-a.w);Y.push(o.y+o.h,o.y-a.h,o.y,o.y+o.h-a.h)});
+ const nr=(v,C)=>{let b=Math.round(v/50)*50,m=120;C.forEach(c=>{if(Math.abs(c-v)<m){m=Math.abs(c-v);b=c}});return b};
+ return[nr(x,X),nr(y,Y)]}
+let ILL=true;
+const SK='stroke="#3a3f47" stroke-width="7"',
+R=(x,y,w,h,f='#fff',r=0)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${f}" ${SK}/>`,
+E=(x,y,a,b,f='#fff')=>`<ellipse cx="${x}" cy="${y}" rx="${a}" ry="${b}" fill="${f}" ${SK}/>`,
+L=(a,b,c,d,k=9)=>`<line x1="${a}" y1="${b}" x2="${c}" y2="${d}" stroke="#3a3f47" stroke-width="${k}"/>`;
+const DEFS=`<pattern id="wood" width="600" height="160" patternUnits="userSpaceOnUse"><rect width="600" height="160" fill="#d9b27c" fill-opacity=".45"/><rect width="300" height="80" fill="#b98c55" fill-opacity=".2"/><rect x="300" y="80" width="300" height="80" fill="#b98c55" fill-opacity=".2"/><path d="M0 0H600M0 80H600M0 160H600M300 0V80M0 80V160M600 80V160" stroke="#7a5a30" stroke-opacity=".4" stroke-width="5" fill="none"/></pattern>
+<pattern id="tile" width="300" height="300" patternUnits="userSpaceOnUse"><rect width="300" height="300" fill="#fff" fill-opacity=".45"/><path d="M0 0H300V300" stroke="#6f8f9c" stroke-opacity=".55" stroke-width="6" fill="none"/></pattern>
+<pattern id="cc" width="500" height="500" patternUnits="userSpaceOnUse"><rect width="500" height="500" fill="#b4b7bb"/><path d="M0 0H500V500" stroke="#8e9195" stroke-width="8" fill="none"/><g fill="#9a9da1" fill-opacity=".6"><circle cx="90" cy="120" r="14"/><circle cx="310" cy="60" r="10"/><circle cx="220" cy="330" r="16"/><circle cx="420" cy="410" r="11"/><circle cx="60" cy="440" r="9"/></g></pattern>
+<pattern id="gr" width="400" height="400" patternUnits="userSpaceOnUse"><rect width="400" height="400" fill="#cfe2b0"/><g fill="#b4cf8f"><circle cx="80" cy="90" r="30"/><circle cx="290" cy="150" r="24"/><circle cx="170" cy="320" r="34"/><circle cx="350" cy="350" r="20"/></g></pattern>
+<pattern id="deck" width="400" height="200" patternUnits="userSpaceOnUse"><rect width="400" height="200" fill="#c9b79a"/><path d="M0 0H400M0 100H400M200 0V100M0 100V200M400 100V200" stroke="#8d7a5c" stroke-width="6" fill="none"/></pattern>
+<linearGradient id="mt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#c5ced4"/></linearGradient>
+<linearGradient id="pc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#e3e6ea"/></linearGradient>
+<linearGradient id="wt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e1f5fe"/><stop offset="1" stop-color="#81d4fa"/></linearGradient>
+<linearGradient id="cb" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#aeb8c1"/><stop offset=".5" stop-color="#eef2f5"/><stop offset="1" stop-color="#aeb8c1"/></linearGradient>
+<linearGradient id="gl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#90a4ae"/><stop offset="1" stop-color="#37474f"/></linearGradient>`;
+const WOODS=[['#d9b27c','#b98c55','#7a5a30'],['#8a6240','#5e3f26','#2f1f12'],['#e8d8bc','#cdb48a','#9c866a']];
+const DEFS2=WOODS.map((c,i)=>`<pattern id="w${i}" width="1800" height="600" patternUnits="userSpaceOnUse"><rect width="1800" height="600" fill="${c[0]}"/><rect width="1800" height="300" fill="${c[1]}" fill-opacity=".16"/><rect x="900" y="300" width="900" height="300" fill="${c[1]}" fill-opacity=".24"/><rect x="0" y="300" width="900" height="300" fill="#fff" fill-opacity=".05"/><path d="M0 0H1800M0 300H1800M0 600H1800M0 0V300M1800 0V300M900 300V600" stroke="${c[2]}" stroke-opacity=".38" stroke-width="5" fill="none"/></pattern>`).join('')+`<linearGradient id="vg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".16"/></linearGradient>`;
+const FL=a=>{const t=a.t,f=(t.startsWith('b1')||['wc','wcm','wr','dr','tl','en'].includes(t))?'tile':t=='bal'?'deck':['car','bike'].includes(t)?'cc':'';return f?`<rect x="${a.x}" y="${a.y}" width="${a.w}" height="${a.h}" rx="24" fill="url(#${f})" style="pointer-events:none"/>`:''};
+function ico(a){const t=a.t,r=a.r||0,w=r%2?a.h:a.w,h=r%2?a.w:a.h;let s='';
+ const sink=(x,y,u,v)=>R(x,y,u,v,'url(#wt)',40),burn=(x,y,q)=>E(x,y,q,q,'#eee')+E(x,y,q*.5,q*.5,'#bbb'),B=[.58,.72,.86];
+ if(['k1','k2','kp','ki'].includes(t))s=R(0,0,w,h,'url(#mt)',20)+sink(w*.1,h*.18,w*.25,h*.64)+B.map(p=>burn(w*p,h*.5,Math.min(h*.16,110))).join('');
+ else if(t=='k3')s=R(0,0,w,650,'url(#mt)',20)+R(0,h-650,w,650,'url(#mt)',20)+sink(w*.1,120,w*.25,410)+B.map(p=>burn(w*p,h-325,110)).join('');
+ else if(t=='kl')s=`<path d="M0 0H${w}V650H650V${h}H0Z" fill="#eceff1" ${SK}/>`+sink(w*.4,120,w*.25,410)+burn(325,h*.6,110)+burn(325,h*.8,110);
+ else if(t=='car')s=[.14,.68].map(y=>R(w*.17,h*y,w*.05,h*.16,'#333',25)+R(w*.78,h*y,w*.05,h*.16,'#333',25)).join('')+R(w*.2,h*.03,w*.6,h*.94,'url(#cb)',w*.14)+R(w*.27,h*.31,w*.46,h*.06,'url(#gl)',20)+R(w*.26,h*.37,w*.48,h*.2,'url(#cb)',20)+R(w*.27,h*.57,w*.46,h*.11,'url(#gl)',20)+R(w*.15,h*.62,w*.05,h*.05,'#667',10)+R(w*.8,h*.62,w*.05,h*.05,'#667',10)+R(w*.24,h*.945,w*.12,h*.025,'#ffe082',8)+R(w*.64,h*.945,w*.12,h*.025,'#ffe082',8)+R(w*.24,h*.03,w*.12,h*.02,'#e57373',8)+R(w*.64,h*.03,w*.12,h*.02,'#e57373',8);
+ else if(t=='bike')s=E(w/2,h*.18,w*.09,h*.14,'#333')+E(w/2,h*.18,w*.04,h*.08,'#aaa')+E(w/2,h*.8,w*.09,h*.14,'#333')+E(w/2,h*.8,w*.04,h*.08,'#aaa')+L(w/2,h*.2,w/2,h*.8,28)+E(w/2,h*.42,w*.2,h*.1,'url(#cb)')+E(w/2,h*.6,w*.15,h*.09,'#222')+L(w*.15,h*.3,w*.85,h*.3,22)+E(w*.15,h*.3,w*.04,w*.04,'#222')+E(w*.85,h*.3,w*.04,w*.04,'#222');
+ else if(t=='bal')s=R(25,25,w-50,h-50,'none')+Array.from({length:Math.floor(h/250)},(_,i)=>L(40,250*(i+1),w-40,250*(i+1),4)).join('');
+ else if(t.startsWith('b1'))s=R(w*.07,h*.06,w*.86,h*.46,'url(#wt)',h*.1)+R(w*.14,h*.12,w*.72,h*.34,'url(#wt)',h*.08)+L(w*.82,h*.6,w*.82,h*.76,14)+E(w*.82,h*.8,w*.07,w*.07)+E(w*.35,h*.8,w*.035,w*.035,'#999');
+ else if(t=='wc'||t=='wcm')s=R(w*.06,h*.05,w*.5,h*.27,'url(#pc)',30)+E(w*.31,h*.18,w*.15,h*.08,'url(#wt)')+R(w*.62,h*.05,w*.32,w*.32,'url(#mt)',30)+E(w*.78,h*.05+w*.16,w*.1,w*.1,'url(#wt)');
+ else if(t=='wr')s=R(w*.08,h*.05,w*.84,h*.28,'url(#pc)',30)+E(w/2,h*.19,w*.25,h*.08,'url(#wt)');
+ else if(t=='dr')s=R(w*.1,h*.05,w*.8,w*.8,'url(#mt)',30)+E(w/2,h*.05+w*.4,w*.3,w*.3,'url(#wt)');
+ else if(t=='tl')s=R(w*.2,h*.04,w*.6,h*.2,'url(#pc)',30)+E(w/2,h*.5,w*.3,h*.2)+E(w/2,h*.5,w*.18,h*.12,'url(#wt)');
+ else if(t=='en')s=R(0,0,w,h*.22,'#cdbfae',10)+L(0,h*.6,w,h*.6,4)+L(w/2,h*.22,w/2,h,4);
+ else if(t=='st'){const{n,tr,sw}=SP(),cw=sw,ch=n*tr;s=`<g transform="scale(${w/cw} ${h/ch})">`+R(0,0,cw,ch,'#f6f3ec');for(let i=1;i<n;i++)s+=L(0,i*tr,cw,i*tr,5);s+=L(cw/2,ch-60,cw/2,160,10)+`<polygon points="${cw*.3},230 ${cw*.7},230 ${cw/2},110" fill="#3a3f47"/></g>`}
+ else if(t=='s2'||t=='s3'){const n=t=='s2'?2:3;s=R(0,0,w,h,'#e9e4da',h*.15)+R(0,0,w,h*.3,'#cfc8ba',h*.15)+R(0,h*.2,w*.08,h*.8,'#cfc8ba',h*.12)+R(w*.92,h*.2,w*.08,h*.8,'#cfc8ba',h*.12);for(let i=1;i<n;i++)s+=L(w*.08+w*.84*i/n,h*.35,w*.08+w*.84*i/n,h*.95,6)}
+ else if(t=='tv')s=R(0,0,w,h,'#cdbfae',10)+R(w*.12,h*.25,w*.76,h*.5,'#455a64',6);
+ else if(t=='stl'){const{n,tr,sw}=SP(),a_=Math.floor((n-3)/2),b_=n-3-a_,cw=sw+b_*tr,ch=sw+a_*tr;s=`<g transform="scale(${w/cw} ${h/ch})"><path d="M0 0H${cw}V${sw}H${sw}V${ch}H0Z" fill="#f6f3ec" ${SK}/>`;for(let i=1;i<a_;i++)s+=L(0,sw+i*tr,sw,sw+i*tr,5);for(let j=1;j<b_;j++)s+=L(sw+j*tr,0,sw+j*tr,sw,5);s+=L(0,sw,sw,sw,5)+L(sw,0,sw,sw,5)+L(sw,sw,0,sw/3,5)+L(sw,sw,sw/3,0,5)+`<path d="M${sw/2} ${ch-40}V${sw/2}H${cw-70}" fill="none" stroke="#3a3f47" stroke-width="12"/><polygon points="${cw-70},${sw/2-65} ${cw-70},${sw/2+65} ${cw-5},${sw/2}" fill="#3a3f47"/></g>`}
+ else if(t=='stu'){const{n,tr,sw}=SP(),m=Math.ceil((n-6)/2),cw=2*sw,ch=sw+m*tr;s=`<g transform="scale(${w/cw} ${h/ch})">`+R(0,0,cw,ch,'#f6f3ec');[[0,sw/3],[sw/3,0],[sw,0],[cw-sw/3,0],[cw,sw/3]].forEach(q=>s+=L(sw,sw,q[0],q[1],5));s+=L(0,sw,cw,sw,5)+L(sw,sw,sw,ch,5);for(let i=1;i<m;i++)s+=L(0,sw+i*tr,cw,sw+i*tr,5);s+=`<path d="M${sw/2} ${ch-40}V${sw/2}H${cw-sw/2}V${ch-90}" fill="none" stroke="#3a3f47" stroke-width="12"/><polygon points="${cw-sw/2-65},${ch-140} ${cw-sw/2+65},${ch-140} ${cw-sw/2},${ch-40}" fill="#3a3f47"/></g>`}
+ else if(t=='dt')s=R(w*.05,h*.26,w*.9,h*.48,'#e6d3ae',50)+[.22,.58].map(x=>R(w*x,h*.02,w*.2,h*.2,'#d9c29a',25)+R(w*x,h*.78,w*.2,h*.2,'#d9c29a',25)).join('');
+ else if(['bs','bsd','bdd'].includes(t)){const n=t=='bs'?1:2,pw=w*.84/n-w*.03;s=R(0,0,w,h,'#f2efe9',40)+R(0,h*.4,w,h*.6,'#d9d4c8',40);for(let i=0;i<n;i++)s+=R(w*.08+i*(w*.84/n),h*.04,pw,h*.15,'#fff',30)}
+ else if(t=='ds')s=R(0,0,w,h,'#e8e2d4',10)+R(w*.33,h*.08,w*.34,h*.2,'#455a64',6)+R(w*.36,h*.45,w*.28,h*.25,'#fff',10);
+ else if(t=='rf')s=R(0,0,w,h,'url(#mt)',40)+L(0,h*.35,w,h*.35)+R(w*.8,h*.12,w*.06,h*.15,'#999')+R(w*.8,h*.45,w*.06,h*.3,'#999');
+ else if(t=='cl')s=R(0,0,w,h,'#cdbfae',10)+L(w/2,0,w/2,h)+R(w*.42,h*.3,w*.04,h*.4,'#999')+R(w*.54,h*.3,w*.04,h*.4,'#999');
+ else if(t=='wic')s=L(w*.08,h*.12,w*.92,h*.12,16)+L(w*.08,h*.88,w*.92,h*.88,16);
+ else s='';
+ if(['b1616','b1216','b1620','wc','wcm','wr','dr','tl','en','wic'].includes(t)){const x0=w*.1,dw=Math.min(750,w*.7);s+=`<path d="M${x0} ${h}V${h-dw}A${dw} ${dw} 0 0 1 ${x0+dw} ${h}" fill="none" stroke="#3a3f47" stroke-width="6"/>`}
+ if(!s)return'';
+ return`<g transform="translate(${a.x+a.w/2},${a.y+a.h/2}) rotate(${r*90}) translate(${-w/2},${-h/2})">${s}</g>`}
+function draw(){const c=chk(),f=S.f,W=S.W,Y0=S.dep[0]+S.ext[0]+S.site.front,d=S.dep[f],oo=OY(f),sx=-S.site.ox,vx=Math.min(-500,sx-300);
+ {const vy=Y0-S.site.d-500,vw=Math.max(W+500,sx+S.site.w+300)-vx,vh=S.site.d+1000,cx=vx+vw/2+PAN[0],cy=vy+vh/2+PAN[1];$('#cv').setAttribute('viewBox',`${cx-vw/2/ZM} ${cy-vh/2/ZM} ${vw/ZM} ${vh/ZM}`)}
+ let o='<defs><filter id="sh" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="14" stdDeviation="14" flood-opacity=".16"/></filter>'+DEFS+DEFS2+'</defs>';
+ o+=`<rect x="${sx}" y="${Y0-S.site.d}" width="${S.site.w}" height="${S.site.d}" fill="url(#gr)" stroke="#8a8a7a" stroke-width="14" stroke-dasharray="80 50"/><text class="lb" x="${sx+60}" y="${Y0-S.site.d+200}" font-size="170">敷地 ${m2(S.site.w)}m × ${m2(S.site.d)}m</text>`;
+ S.dep.forEach((e,i)=>{if(i!=f)o+=`<rect class="gh" x="0" y="${OY(i)}" width="${W}" height="${e}"/>`});
+ o+=`<rect x="${S.wall/2}" y="${oo+S.wall/2}" width="${W-S.wall}" height="${d-S.wall}" fill="url(#w${S.fl||0})" stroke="#3b4350" stroke-width="${S.wall}" filter="url(#sh)"/><rect x="${S.wall}" y="${oo+S.wall}" width="${W-2*S.wall}" height="${d-2*S.wall}" fill="url(#vg)" style="pointer-events:none"/><rect x="${S.wall}" y="${oo+S.wall}" width="${W-2*S.wall}" height="${d-2*S.wall}" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="8"/>`;
+ EXT(f).forEach(z=>{const h=z[1]-z[0];o+=`<rect x="0" y="${z[0]}" width="${W}" height="${h}" fill="${f==1?'url(#deck)':'#cfd3d8'}" stroke="#7a8a7a" stroke-width="12" stroke-dasharray="60 40"/><text class="lb" x="${W/2}" y="${z[0]+h/2+60}" text-anchor="middle" font-size="150">${f==1?'バルコニー(外)':'屋根部分'}</text>`});
+ for(let x=1000;x<W;x+=1000)o+=`<line class="g" x1="${x}" y1="${oo}" x2="${x}" y2="${oo+d}"/>`;
+ for(let y=1000;y<d;y+=1000)o+=`<line class="g" x1="0" y1="${oo+y}" x2="${W}" y2="${oo+y}"/>`;
+ [.2,.5,.8].forEach(k=>{const y=oo+d*k-600;[0,W-S.wall].forEach(x=>{o+=`<rect x="${x}" y="${y}" width="${S.wall}" height="1200" fill="#fff" stroke="#3b4350" stroke-width="6"/><line x1="${x+S.wall/2}" y1="${y}" x2="${x+S.wall/2}" y2="${y+1200}" stroke="#3b4350" stroke-width="4"/>`})});
+ o+=`<text class="lb" x="0" y="-150" font-size="170">奥(道路の反対側)  ${m2(W)}m × ${m2(d)}m = ${c.A[f].toFixed(2)}㎡</text>`;
+ o+=`<rect x="${sx}" y="${Y0+80}" width="${S.site.w}" height="260" fill="#5b5e63"/><line x1="${sx}" y1="${Y0+130}" x2="${sx+S.site.w}" y2="${Y0+130}" stroke="#f5d742" stroke-width="14" stroke-dasharray="140 110"/><text x="${sx+S.site.w/2}" y="${Y0+235}" text-anchor="middle" font-size="130" style="fill:#fff">道路</text>`;
+ S.items.forEach((fl,i)=>{if(i!=f)fl.filter(a=>[...ST,'col','car','bike'].includes(a.t)).forEach(a=>o+=`<rect class="gh" x="${a.x}" y="${a.y}" width="${a.w}" height="${a.h}"/>`)});
+ const ord={a:0,r:0,b:1,o:1,f:2};
+ [...S.items[f]].sort((a,b)=>ord[T[a.t].k]+(a.t=='tvs'?.5:0)-ord[T[b.t].k]-(b.t=='tvs'?.5:0)).forEach(a=>{const t=T[a.t],sel=a.i==S.sel,b=c.bad.has(a.i),w=c.wz.has(a.i);
+  o+=`<g data-i="${a.i}" style="cursor:move${t.k=='r'||t.k=='a'?'':';filter:url(#sh)'}"><rect x="${a.x}" y="${a.y}" width="${a.w}" height="${a.h}" rx="8" fill="${t.k=='b'||t.k=='f'?'#f6f3ec':t.c}" fill-opacity="${t.k=='r'?.3:1}" stroke="${b?'#d33':w?'#e6a100':sel?'#14b8a6':'#2b2f36'}" stroke-width="${sel||b||w?26:8}"/>`;
+  o+=ILL?FL(a)+ico(a):mark(a);
+  if(a.w>300&&a.h>250){const fs=Math.min(ILL?110:140,a.w/(t.n.length+.5));o+=`<text x="${a.x+a.w/2}" y="${a.y+a.h/2}" text-anchor="middle" font-size="${fs}" style="paint-order:stroke;stroke:#fff;stroke-width:18;stroke-linejoin:round;font-weight:600">${t.n}<tspan x="${a.x+a.w/2}" dy="${fs*1.2}" font-size="${fs*.8}">${m2(a.w)}×${m2(a.h)}</tspan></text>`}
+  o+='</g>'});
+ $('#cv').innerHTML=o;
+ $('#tabs').innerHTML=[0,1,2].map(i=>`<button class="${i==f?'on':''}" data-f="${i}">${i+1}階</button>`).join('');
+ side(c);save()}
+// サイズ候補: [幅,奥行] または [名前,幅,奥行,種別]
+const PRE={car:[[2500,4500],[3000,5000],[3500,5500]],bike:[[1000,1800],[1340,2000],[1500,2200]],col:[[125,125],[150,150],[200,200]],bal:[[4160,1000],[4160,1440],[4160,2000]],
+bath:[['1216',1320,1720,'b1216'],['1616',1720,1720,'b1616'],['1620',1720,2120,'b1620']],
+wc:[['コンパクト',1520,1720,'wc'],['標準',1720,1720,'wc'],['広め',1920,1720,'wcm']],wr:[[900,1720],[1120,1720],[1320,1720]],dr:[[900,1720],[1120,1720],[1320,1720]],
+tl:[[870,1470],[920,1720],[1120,1720]],en:[[900,900],[1200,900],[1500,1200]],stair:[['直階段',900,2700,'st'],['L字(回り階段)',2025,1800,'stl'],['折返し(回り階段)',1800,1575,'stu']],
+ldk:[[3760,4000],[3760,4800],[3760,5600]],bd:[[2700,2700],[3000,3300],[3500,3600]],wic:[[1200,1800],[1800,1800],[2400,1800]],ch:[[2250,2400],[2400,2700],[2700,3000]],
+k1:[[2100,650],[2550,650],[2700,650]],k2:[[2100,750],[2550,750],[2700,750]],kp:[[2100,1000],[2550,1000],[2700,1000]],ki:[[2000,1000],[2400,1000],[3000,1000]],kl:[[2100,1650],[2400,1800],[2700,1800]],k3:[[2100,2250],[2550,2400],[2700,2400]],
+s2:[[1300,850],[1500,850],[1700,850]],s3:[[1700,850],[1900,850],[2100,850]],tv:[['〜43型用',1200,400],['〜55型用',1500,400],['〜65型用',1800,400]],tvs:[['43型',960,230],['55型',1230,250],['65型',1450,280]],dt:[['2人用',1200,750],['4人用',1500,800],['6人用',1800,900]],
+bed:[['シングル',1000,2000,'bs'],['セミダブル',1200,2000,'bsd'],['ダブル',1400,2000,'bdd']],ds:[[1000,600],[1200,600],[1400,700]],rf:[['約300L',600,650],['約450L',685,700],['約600L',830,720]],cl:[[750,500],[900,550],[1200,550]]};
+const ST=['st','stl','stu'];
+const pk=t=>ST.includes(t)?'stair':BA.includes(t)?'bath':['bs','bsd','bdd'].includes(t)?'bed':t=='wcm'?'wc':t;
+const pn=e=>typeof e[0]=='string'?{l:e[0],w:e[1],h:e[2],t:e[3]}:{l:m2(e[0])+'×'+m2(e[1]),w:e[0],h:e[1]};
+function presetRow(a){const L=(PRE[pk(a.t)]||[]).map(pn);if(!L.length)return'';const rv=(a.r||0)%2;
+ return'<div class="card"><div class="mu">サイズを選ぶ(メイン3つ)</div>'+L.map((p,i)=>{const on=(rv?a.h==p.w&&a.w==p.h:a.w==p.w&&a.h==p.h)&&(!p.t||a.t==p.t);return`<button class="${on?'on':''}" data-pr="${i}" title="${p.w}×${p.h}mm">${p.l}</button>`}).join(' ')+'</div>'}
+const SP=()=>{const n=Math.max(8,S.stn||Math.ceil(S.fh/220)),tr=S.tr||225,sw=S.sw||900;return{n,tr,sw,rise:S.fh/n}};
+const SD=t=>{const{n,tr,sw}=SP();if(t=='st')return[sw,n*tr];if(t=='stl'){const a=Math.floor((n-3)/2);return[sw+(n-3-a)*tr,sw+a*tr]}return[2*sw,sw+Math.ceil((n-6)/2)*tr]};
+function syncStairs(){ST.forEach(t=>{const d=SD(t);T[t].w=d[0];T[t].h=d[1]});PRE.stair=[['直階段',...SD('st'),'st'],['L字(回り階段)',...SD('stl'),'stl'],['折返し(回り階段)',...SD('stu'),'stu']];
+ S.items.forEach(fl=>fl.filter(a=>ST.includes(a.t)).forEach(a=>{const d=SD(a.t),rv=(a.r||0)%2,cx=a.x+a.w/2,cy=a.y+a.h/2;a.w=rv?d[1]:d[0];a.h=rv?d[0]:d[1];a.x=Math.round((cx-a.w/2)/10)*10;a.y=Math.round((cy-a.h/2)/10)*10}))}
+function side(c){const f=S.f,a=cur(),ic={o:'✅',w:'⚠️',e:'❌'},nb=c.R.filter(r=>r[0]!='o').length;
+ let h0=`<div class="card"><b>${nb?'⚠️ 確認が必要: '+nb+'件':'✅ いまのところ問題なし'}</b><div class="mu">赤・黄色の項目を直していきましょう</div></div><div class="card"><b>広さ(㎡)</b>`;
+ c.A.forEach((v,i)=>{const p=v/S.max[i];h0+=`<div class="row"><span>${i+1}階</span><b>${v.toFixed(2)} / ${S.max[i]}</b></div><div class="bar ${p>1?'e':''}"><i style="width:${Math.min(100,p*100)}%"></i></div>`});
+ h0+=`<div class="row"><span>延べ合計</span><b>${c.tot.toFixed(2)} / ${S.tot}</b></div><div class="mu">※建物の外の車・バイクは含まず、外のバルコニーは含みます</div></div>`;
+ const pl=S.items[f].filter(x=>'bra'.includes(T[x.t].k)).reduce((s,x)=>s+ar(x),0);
+ h0+=`<div class="card"><b>${f+1}階の使い道</b><div class="mu">屋内 ${(c.A[f]-c.exF[f]).toFixed(1)}㎡のうち、部屋・設備を置いた面積は ${pl.toFixed(1)}㎡</div></div><div class="card"><b>チェック一覧</b>`+c.R.map(r=>`<div class="rw ${r[0]}">${ic[r[0]]} ${r[1]}</div>`).join('')+'</div>';
+ let h1;
+ if(a)h1=`<div class="card"><b>${T[a.t].n}</b>(${m2(a.w)}m × ${m2(a.h)}m)<div class="mu">ドラッグで移動できます</div></div>`+presetRow(a)+`<div class="card"><div class="mu">向き・操作</div><button data-a="rotl">↺ 左回転</button> <button data-a="rot">↻ 右回転</button> <button data-a="dup">コピー</button> <button data-a="del">削除</button></div><details class="card"><summary>数値で細かく変更</summary>`+['x','y','w','h'].map(k=>`<div class="row"><span>${{x:'左からの位置',y:'奥からの位置',w:'幅',h:'奥行'}[k]}(mm)</span><input type="number" step="10" data-q="${k}" value="${a[k]}"></div>`).join('')+'</details>';
+ else h1='<div class="card">図形をクリックすると、サイズや向きを変えられます。<div class="mu">左のパーツ一覧から追加もできます。</div></div>';
+ const row=(k,l,v,st)=>`<div class="row"><span>${l}</span><input type="number" ${st?'step="'+st+'"':''} data-p="${k}" value="${v}"></div>`;
+ let h2=`<div class="card"><b>建物(mm)</b>`+row('W','建物の幅(最大)',S.W)+row('wall','外壁の厚さ',S.wall)+row('fh','階高',S.fh)+row('tot','延べ面積の上限(㎡)',S.tot)+row('stn','階段の段数(0=階高から自動)',S.stn||0)+row('tr','踏面(1段の奥行 mm)',S.tr||225)+row('sw','階段の幅(mm)',S.sw||900)+`<div class="mu">階段: ${SP().n}段・蹴上 ${Math.round(SP().rise)}mm(230mm以下が目安)</div></div>`;
+ [0,1,2].forEach(i=>h2+=`<div class="card"><b>${i+1}階</b>`+row('dep'+i,'建物の奥行(mm)',S.dep[i])+row('ext'+i,i==0?'外部の奥行(mm)':i==1?'バルコニー(mm)':'屋根部分(mm)',S.ext[i])+row('max'+i,'広さの上限(㎡)',S.max[i],.1)+'</div>');
+ h2+=`<div class="card"><b>敷地(mm)</b>`+row('site_w','道路側の幅',S.site.w)+row('site_d','奥行',S.site.d)+row('site_ox','建物の左位置',S.site.ox)+row('site_front','道路から建物まで',S.site.front)+'</div><button data-a="auto">奥行を面積上限から自動計算</button>';
+ $('#side').innerHTML=`<div class="st">${['✔ チェック','🧰 選んだもの','⚙ 条件'].map((n,i)=>`<button data-tab="${i}" class="${i==TAB?'on':''}">${n}</button>`).join('')}</div>`+[h0,h1,h2][TAB]}
+function add(t){const x=T[t].k=='o'?0:S.wall,a=mk(t,x,OY(S.f)+S.wall);const z=EXT(S.f)[0];if(t=='bal'&&z){a.x=0;a.y=z[0];a.h=z[1]-z[0]}if(t=='car'||t=='bike')a.y=-a.h-100;S.items[S.f].push(a);S.sel=a.i;TAB=1;draw()}
+$('#pal').innerHTML='<div class="mu" style="margin-bottom:8px">パーツをクリックすると図に追加されます</div>'+G.map(([g,ids])=>`<details open><summary>${g}</summary>`+ids.map(t=>`<button data-t="${t}" title="${m2(T[t].w)}×${m2(T[t].h)}m">${T[t].n}</button>`).join('')+'</details>').join('');
+$('#pal').onclick=e=>{const t=e.target.dataset.t;if(t){add(t);if(typeof matchMedia!='undefined'&&matchMedia('(max-width:900px)').matches)setV('cv')}};
+$('#tabs').onclick=e=>{if(e.target.dataset.f!=null){S.f=+e.target.dataset.f;S.sel=null;draw()}};
+const cv=$('#cv'),pt=e=>{const p=cv.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(cv.getScreenCTM().inverse())};
+cv.onpointerdown=e=>{const g=e.target.closest('[data-i]');if(!g){S.sel=null;TAB=0;drag={pan:1,x:e.clientX,y:e.clientY};cv.setPointerCapture(e.pointerId);draw();return}
+ S.sel=+g.dataset.i;TAB=1;const p=pt(e),a=cur();drag={dx:p.x-a.x,dy:p.y-a.y};cv.setPointerCapture(e.pointerId);draw()};
+cv.onpointermove=e=>{if(!drag)return;
+ if(drag.pan){const k=cv.getScreenCTM().a;PAN[0]-=(e.clientX-drag.x)/k;PAN[1]-=(e.clientY-drag.y)/k;drag.x=e.clientX;drag.y=e.clientY;draw();return}
+const a=cur(),p=pt(e),[x,y]=snap(a,p.x-drag.dx,p.y-drag.dy);a.x=x;a.y=y;draw()};
+cv.onpointerup=()=>{drag=null};
+cv.onwheel=e=>{e.preventDefault();ZM=Math.min(4,Math.max(.6,ZM*(e.deltaY<0?1.15:.87)));draw()};
+$('#zm').onclick=e=>{const z=e.target.dataset.z;if(z==null)return;if(z=='0'){ZM=1;PAN=[0,0]}else ZM=Math.min(4,Math.max(.6,ZM*(z=='1'?1.3:.77)));draw()};
+$('#nav').onclick=e=>{const v=e.target.dataset.v;if(v)setV(v)};
+$('#side').onchange=e=>{const t=e.target,v=parseFloat(t.value);if(isNaN(v))return;
+ if(t.dataset.q){const a=cur();if(a)a[t.dataset.q]=Math.round(v)}
+ else if(t.dataset.p){const k=t.dataset.p;if(k=='W'||k=='wall'||k=='tot'||k=='fh'||k=='stn'||k=='tr'||k=='sw')S[k]=v;else if(k.startsWith('dep'))S.dep[+k[3]]=Math.round(v);else if(k.startsWith('ext'))S.ext[+k[3]]=Math.round(v);else if(k.startsWith('site_'))S.site[k.slice(5)]=Math.round(v);else S.max[+k[3]]=v;syncStairs()}
+ draw()};
+$('#side').onclick=e=>{if(e.target.dataset.tab!=null){TAB=+e.target.dataset.tab;draw();return}
+ const k=e.target.dataset.a,a=cur(),pi=e.target.dataset.pr;
+ if(pi!=null&&a){const p=pn(PRE[pk(a.t)][+pi]),rv=(a.r||0)%2,cx=a.x+a.w/2,cy=a.y+a.h/2;if(p.t)a.t=p.t;a.w=rv?p.h:p.w;a.h=rv?p.w:p.h;a.x=Math.round((cx-a.w/2)/10)*10;a.y=Math.round((cy-a.h/2)/10)*10;draw();return}
+ if(!k)return;
+ if(k=='auto')S.dep=S.max.map(m=>Math.floor(m*1e6/S.W));
+ else if(k=='rot'&&a)rot(a);else if(k=='rotl'&&a)rot(a,3);
+ else if(k=='dup'&&a){const b={...a,i:S.nid++,x:a.x+100,y:a.y+100};S.items[S.f].push(b);S.sel=b.i}
+ else if(k=='del'&&a){S.items[S.f]=S.items[S.f].filter(x=>x.i!=a.i);S.sel=null}
+ draw()};
+window.onkeydown=e=>{if(/INPUT/.test(e.target.tagName))return;const a=cur();if(!a)return;
+ if(e.key=='r')rot(a);else if(e.key=='R')rot(a,3);
+ else if(e.key=='Delete'||e.key=='Backspace'){S.items[S.f]=S.items[S.f].filter(x=>x.i!=a.i);S.sel=null}
+ else{const d={ArrowLeft:[-50,0],ArrowRight:[50,0],ArrowUp:[0,-50],ArrowDown:[0,50]}[e.key];if(!d)return;a.x+=d[0];a.y+=d[1]}
+ e.preventDefault();draw()};
+const dlg=(msg,mode)=>new Promise(res=>{const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99;background:#0008;display:flex;align-items:center;justify-content:center;padding:16px';
+ o.innerHTML=`<div class="card" style="max-width:420px;width:100%;margin:0;padding:16px"><div style="margin-bottom:10px">${msg}</div>${mode=='text'?'<textarea style="width:100%;height:120px;font:12px monospace;background:var(--pn);color:var(--tx);border:1px solid var(--bd);border-radius:8px"></textarea>':''}<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">${mode=='ok'?'':'<button data-c="1">キャンセル</button>'}<button class="on" data-c="0">OK</button></div></div>`;
+ o.onclick=e=>{const c=e.target.dataset.c;if(c==null)return;const v=o.querySelector('textarea');o.remove();res(c=='1'?null:v?v.value.trim():'')};document.body.appendChild(o)});
+$('#sv').onclick=async()=>{const j=JSON.stringify(S);try{await navigator.clipboard.writeText(j);await dlg('プランをコピーしました。LINEなどに貼り付けて友達に送れます','ok')}catch(e){await dlg('コピーできませんでした。下の文字を全部コピーして送ってください:<br><textarea readonly style=\"width:100%;height:90px;font-size:11px\">'+j.replace(/</g,'&lt;')+'</textarea>','ok');}};
+$('#lb').onclick=async()=>{const t=await dlg('送られたプランのテキストを貼り付けてください(ファイルから読み込む場合は空のままOK)','text');if(t===null)return;if(t===''){$('#ld').click();return}try{const j=JSON.parse(t);if(j.items&&j.dep&&j.ext&&j.site){S=j;syncStairs();draw()}else await dlg('読み込めませんでした','ok')}catch(x){await dlg('読み込めませんでした','ok')}};
+$('#ld').onchange=e=>{const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);if(j.items&&j.dep&&j.ext&&j.site){S=j;syncStairs();draw()}}catch(x){dlg('読み込めませんでした','ok')}};if(e.target.files[0])r.readAsText(e.target.files[0])};
+$('#dl').onclick=()=>{const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));l.download='madori-plan.json';l.click()};
+$('#rs').onclick=()=>dlg('配置をすべて初期化しますか?','yn').then(r=>{if(r!==null){init();syncStairs();draw()}});
+$('#rt').onclick=()=>{const a=cur();if(a){rot(a);draw()}};
+cv.ondblclick=()=>{const a=cur();if(a){rot(a);draw()}};
+$('#il').onclick=e=>{ILL=!ILL;e.target.classList.toggle('on',ILL);draw()};
+const sdT=()=>$('#sd').textContent='バルコニー/屋根: '+(S.side=='back'?'奥側':'道路側');
+$('#sd').onclick=()=>{S.side=S.side=='back'?'front':'back';sdT();draw()};sdT();
+const spT=()=>$('#sp').textContent='3F屋根: '+(S.sp3?'上下2分割':'片側');
+$('#sp').onclick=()=>{S.sp3=!S.sp3;spT();draw()};spT();
+const flT=()=>$('#fl').textContent='床: '+['ナチュラル','ダーク','ホワイト'][S.fl||0];
+$('#fl').onclick=()=>{S.fl=((S.fl||0)+1)%3;flT();draw()};flT();
+syncStairs();
+draw();
+</script></body></html>
